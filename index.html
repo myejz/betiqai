@@ -1,0 +1,1318 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BetIQ – Akıllı Tahmin Platformu</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c12;
+    --bg2: #0d1320;
+    --bg3: #111827;
+    --card: #141e2e;
+    --card2: #1a2540;
+    --border: #1f2d45;
+    --accent: #00e5a0;
+    --accent2: #00b8ff;
+    --accent3: #f59e0b;
+    --danger: #ef4444;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --win: #10b981;
+    --trap: #f97316;
+    --premium: #a855f7;
+    --glow: 0 0 20px rgba(0,229,160,0.15);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(0,229,160,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,160,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events:none; z-index:0;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    position:sticky; top:0; z-index:100;
+    background: rgba(8,12,18,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+  }
+  .header-inner {
+    max-width: 1400px; margin:0 auto;
+    display: flex; align-items:center; justify-content:space-between;
+    height: 64px;
+  }
+  .logo { font-family: 'Rajdhani', sans-serif; font-size: 28px; font-weight:700; letter-spacing: 2px; }
+  .logo span { color: var(--accent); }
+  .logo-sub { font-size:11px; color:var(--text3); letter-spacing:3px; font-family:'IBM Plex Mono',monospace; display:block; margin-top:-4px; }
+  .header-stats { display:flex; gap:32px; align-items:center; }
+  .hstat { text-align:center; }
+  .hstat-val { font-family:'Rajdhani',sans-serif; font-size:20px; font-weight:700; color:var(--accent); line-height:1; transition:.4s; }
+  .hstat-lbl { font-size:10px; color:var(--text3); letter-spacing:1px; text-transform:uppercase; margin-top:2px; }
+  .header-right { display:flex; gap:12px; align-items:center; }
+  .live-badge {
+    background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.4);
+    color: #ef4444; font-size:11px; font-weight:600;
+    padding:4px 10px; border-radius:20px; font-family:'IBM Plex Mono',monospace;
+    display:flex; align-items:center; gap:6px;
+    animation: pulse-badge 1.5s ease-in-out infinite;
+  }
+  .live-dot { width:6px; height:6px; border-radius:50%; background:#ef4444; }
+  @keyframes pulse-badge { 0%,100%{opacity:1} 50%{opacity:0.6} }
+  .refresh-btn {
+    padding:6px 14px; border-radius:8px;
+    background:rgba(0,229,160,0.08); border:1px solid rgba(0,229,160,0.25);
+    color:var(--accent); font-size:12px; font-weight:600; cursor:pointer;
+    font-family:'IBM Plex Mono',monospace; transition:.2s;
+  }
+  .refresh-btn:hover { background:rgba(0,229,160,0.16); }
+  .refresh-btn.spinning { animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ─── LAYOUT ─── */
+  .main {
+    max-width:1400px; margin:0 auto;
+    padding: 24px; position:relative; z-index:1;
+    display:grid; grid-template-columns:1fr 360px; gap:24px;
+  }
+
+  /* ─── TABS ─── */
+  .tabs {
+    display:flex; gap:4px; margin-bottom:20px;
+    background:var(--bg3); padding:4px; border-radius:12px;
+    border:1px solid var(--border); width:fit-content;
+  }
+  .tab {
+    padding:8px 20px; border-radius:8px; font-size:13px; font-weight:600;
+    cursor:pointer; transition:all .2s; color:var(--text2); border:none; background:none;
+  }
+  .tab.active { background: var(--card2); color: var(--accent); box-shadow: var(--glow); }
+  .tab:hover:not(.active) { color:var(--text); }
+
+  /* ─── FILTER BAR ─── */
+  .filter-bar { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+  .filter-chip {
+    padding:6px 14px; border-radius:20px;
+    background:var(--bg3); border:1px solid var(--border);
+    font-size:12px; font-weight:500; color:var(--text2); cursor:pointer; transition:.2s;
+  }
+  .filter-chip.active { background:rgba(0,229,160,0.1); border-color:rgba(0,229,160,0.4); color:var(--accent); }
+  .filter-chip:hover:not(.active) { border-color:var(--text3); color:var(--text); }
+
+  /* ─── DAY GROUP ─── */
+  .day-group { margin-bottom:28px; }
+  .day-header { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+  .day-label { font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:600; color:var(--text3); letter-spacing:2px; text-transform:uppercase; }
+  .day-line { flex:1; height:1px; background:var(--border); }
+  .day-count { font-size:11px; font-family:'IBM Plex Mono',monospace; color:var(--text3); }
+
+  /* ─── MATCH CARD ─── */
+  .match-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 16px; padding: 18px 20px; margin-bottom:12px;
+    transition: all .25s; cursor:pointer; position:relative; overflow:hidden;
+    animation: fadeUp .3s ease both;
+  }
+  .match-card::before {
+    content:''; position:absolute; left:0; top:0; bottom:0;
+    width:3px; background: var(--accent); opacity:0; transition:.25s;
+  }
+  .match-card.value-card::before { background: var(--accent); opacity:1; }
+  .match-card.trap-card::before { background: var(--trap); opacity:1; }
+  .match-card:hover { border-color:rgba(0,229,160,0.3); transform:translateY(-1px); }
+  .match-card:hover::before { opacity:1; }
+  .match-card.selected { border-color: rgba(0,229,160,0.5); background: var(--card2); box-shadow: var(--glow); }
+
+  .card-top {
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;
+  }
+  .card-meta { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .league-badge {
+    font-size:11px; font-weight:600; padding:3px 10px; border-radius:20px;
+    background:rgba(0,184,255,0.12); border:1px solid rgba(0,184,255,0.25);
+    color:var(--accent2); font-family:'IBM Plex Mono',monospace;
+  }
+  .platform-badge {
+    font-size:10px; font-weight:700; padding:3px 8px; border-radius:20px;
+    font-family:'IBM Plex Mono',monospace;
+    background:rgba(99,102,241,0.12); border:1px solid rgba(99,102,241,0.3);
+    color:#a5b4fc;
+  }
+  .match-time { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--text3); }
+
+  /* ─── EDGE BADGE ─── */
+  .edge-badge {
+    font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:700;
+    padding:3px 10px; border-radius:20px; border:1px solid;
+  }
+  .edge-premium { background:rgba(168,85,247,0.12); border-color:rgba(168,85,247,0.4); color:#d8b4fe; }
+  .edge-high    { background:rgba(0,229,160,0.12);  border-color:rgba(0,229,160,0.4);  color:var(--accent); }
+  .edge-medium  { background:rgba(245,158,11,0.12); border-color:rgba(245,158,11,0.4); color:#fcd34d; }
+  .edge-low     { background:rgba(100,116,139,0.12);border-color:rgba(100,116,139,0.4);color:var(--text3); }
+  .trap-flag {
+    font-size:10px; font-weight:700; padding:3px 10px; border-radius:20px;
+    background:rgba(249,115,22,0.12); border:1px solid rgba(249,115,22,0.3);
+    color:var(--trap); font-family:'IBM Plex Mono',monospace;
+  }
+
+  /* ─── TEAMS ─── */
+  .teams {
+    display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;
+  }
+  .team { text-align:center; flex:1; }
+  .team-name { font-family:'Rajdhani',sans-serif; font-size:17px; font-weight:600; line-height:1.2; }
+  .team-form { display:flex; gap:3px; justify-content:center; margin-top:5px; }
+  .form-dot {
+    width:14px; height:14px; border-radius:50%;
+    font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center;
+  }
+  .form-w { background:rgba(16,185,129,0.3); color:#10b981; }
+  .form-d { background:rgba(245,158,11,0.3); color:#f59e0b; }
+  .form-l { background:rgba(239,68,68,0.3); color:#ef4444; }
+  .vs-block { text-align:center; padding:0 16px; flex-shrink:0; }
+  .vs-text { font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; color:var(--text3); }
+  .vs-tempo {
+    font-size:9px; font-family:'IBM Plex Mono',monospace; color:var(--text3);
+    margin-top:2px; letter-spacing:1px;
+  }
+  .vs-score {
+    font-family:'Rajdhani',sans-serif; font-size:13px; font-weight:600;
+    color:var(--accent2); margin-top:1px;
+  }
+
+  /* ─── PREDICTION ROW ─── */
+  .pred-row {
+    display:flex; align-items:center; gap:10px;
+    padding:10px 14px; background:rgba(0,0,0,0.25);
+    border-radius:10px; border:1px solid var(--border); margin-bottom:10px;
+  }
+  .pred-icon { font-size:18px; flex-shrink:0; }
+  .pred-main { flex:1; }
+  .pred-label { font-size:12px; color:var(--text3); margin-bottom:2px; }
+  .pred-value { font-family:'Rajdhani',sans-serif; font-size:16px; font-weight:700; color:var(--text); }
+  .pred-confidence { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; min-width:80px; }
+  .conf-pct { font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:600; }
+  .conf-pct.high { color:var(--accent); }
+  .conf-pct.med  { color:var(--accent3); }
+  .conf-pct.low  { color:var(--danger); }
+  .conf-bar { width:80px; height:4px; background:var(--bg3); border-radius:2px; overflow:hidden; }
+  .conf-fill { height:100%; border-radius:2px; transition:width .6s ease; }
+  .fill-high { background: linear-gradient(90deg, var(--accent), #00b8ff); }
+  .fill-med  { background: linear-gradient(90deg, var(--accent3), #f97316); }
+  .fill-low  { background: linear-gradient(90deg, var(--danger), #f97316); }
+
+  /* ─── ODDS ROW ─── */
+  .odds-row { display:flex; gap:8px; margin-bottom:10px; }
+  .odd-box {
+    flex:1; padding:8px 10px; background:var(--bg3); border:1px solid var(--border);
+    border-radius:8px; text-align:center; transition:.2s;
+  }
+  .odd-box.recommended {
+    background:rgba(0,229,160,0.08); border-color:rgba(0,229,160,0.4);
+    box-shadow:0 0 12px rgba(0,229,160,0.1);
+  }
+  .odd-name { font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:3px; }
+  .odd-val { font-family:'Rajdhani',sans-serif; font-size:18px; font-weight:700; }
+  .odd-box.recommended .odd-val { color:var(--accent); }
+  .odd-val.normal { color:var(--text); }
+  .rec-arrow { font-size:9px; color:var(--accent); margin-top:1px; }
+
+  /* ─── VALUE ROW ─── */
+  .value-row {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 14px;
+    background:rgba(0,229,160,0.05); border:1px solid rgba(0,229,160,0.2);
+    border-radius:10px; margin-bottom:10px;
+  }
+  .value-row.trap-row {
+    background:rgba(249,115,22,0.05); border-color:rgba(249,115,22,0.25);
+  }
+  .vr-section { display:flex; flex-direction:column; gap:2px; }
+  .vr-label { font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; }
+  .vr-val { font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:600; }
+  .vr-val.accent  { color:var(--accent); }
+  .vr-val.premium { color:#d8b4fe; }
+  .vr-val.warn    { color:var(--trap); }
+  .vr-divider { width:1px; height:36px; background:var(--border); }
+
+  /* ─── INVEST ROW ─── */
+  .invest-row {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 14px;
+    background:rgba(0,229,160,0.05); border:1px solid rgba(0,229,160,0.2);
+    border-radius:10px;
+  }
+  .invest-label { font-size:12px; color:var(--text2); }
+  .invest-values { display:flex; align-items:baseline; gap:8px; }
+  .invest-min { font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--text3); }
+  .invest-rec { font-family:'Rajdhani',sans-serif; font-size:20px; font-weight:700; color:var(--accent); }
+  .invest-gain { font-size:12px; color:var(--win); font-family:'IBM Plex Mono',monospace; }
+  .add-combo-btn {
+    padding:6px 14px; border-radius:8px;
+    background:rgba(0,229,160,0.12); border:1px solid rgba(0,229,160,0.3);
+    color:var(--accent); font-size:12px; font-weight:600; cursor:pointer; transition:.2s;
+  }
+  .add-combo-btn:hover { background:rgba(0,229,160,0.2); }
+  .add-combo-btn.added { background:rgba(0,229,160,0.25); border-color:var(--accent); }
+
+  /* ─── DETAILS PANEL ─── */
+  .details-panel {
+    display:none; padding-top:12px; border-top:1px solid var(--border); margin-top:12px;
+  }
+  .details-panel.open { display:block; }
+  .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+  .detail-item { background:var(--bg3); padding:10px 12px; border-radius:8px; border:1px solid var(--border); }
+  .di-label { font-size:10px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+  .di-val { font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; color:var(--text); }
+  .di-val.green  { color:var(--accent); }
+  .di-val.purple { color:#d8b4fe; }
+  .di-val.orange { color:var(--trap); }
+  .prob-bar-row { margin-bottom:10px; }
+  .prob-bar-label { display:flex; justify-content:space-between; margin-bottom:4px; font-size:11px; color:var(--text3); }
+  .prob-bar-track { height:6px; background:var(--bg3); border-radius:3px; overflow:hidden; display:flex; gap:1px; }
+  .pb-seg { height:100%; transition:width .6s ease; }
+  .pb-home { background:var(--accent); }
+  .pb-draw { background:var(--accent3); }
+  .pb-away { background:var(--danger); }
+  .analysis-text {
+    font-size:12px; color:var(--text2); line-height:1.7;
+    padding:10px 14px; background:rgba(0,0,0,0.2);
+    border-radius:8px; border-left:3px solid rgba(0,229,160,0.4);
+  }
+  .analysis-text.trap-text { border-left-color:rgba(249,115,22,0.5); }
+  .all-bets-list { margin-top:10px; }
+  .bet-line {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:6px 10px; margin-bottom:4px;
+    background:var(--bg3); border-radius:6px; border:1px solid var(--border);
+    font-size:11px;
+  }
+  .bet-line-market { color:var(--text2); flex:1; }
+  .bet-line-edge { font-family:'IBM Plex Mono',monospace; font-weight:600; }
+  .bet-line-edge.pos { color:var(--accent); }
+  .bet-line.approved { border-color:rgba(0,229,160,0.3); }
+  .bet-line.rejected { opacity:.5; }
+  .bet-fw { font-size:10px; padding:2px 6px; border-radius:4px; font-family:'IBM Plex Mono',monospace; margin-left:6px; }
+  .bet-fw.ok { background:rgba(0,229,160,0.15); color:var(--accent); }
+  .bet-fw.no { background:rgba(239,68,68,0.12); color:var(--danger); }
+
+  /* ─── SIDEBAR ─── */
+  .sidebar { position:sticky; top:88px; height:fit-content; }
+  .stats-box { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:16px; }
+  .box-title {
+    font-family:'Rajdhani',sans-serif; font-size:16px; font-weight:700;
+    letter-spacing:1px; text-transform:uppercase; color:var(--text2); margin-bottom:16px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .box-title-dot { width:8px; height:8px; border-radius:50%; background:var(--accent); box-shadow:0 0 8px var(--accent); }
+  .stat-row {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 0; border-bottom:1px solid rgba(31,45,69,0.5);
+  }
+  .stat-row:last-child { border-bottom:none; }
+  .stat-name { font-size:13px; color:var(--text2); }
+  .stat-val { font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:600; color:var(--accent); }
+  .stat-val.warn { color:var(--trap); }
+  .accuracy-ring { display:flex; justify-content:center; padding:12px 0; position:relative; }
+  .ring-svg { width:100px; height:100px; }
+  .ring-text { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .ring-pct { font-family:'Rajdhani',sans-serif; font-size:26px; font-weight:700; color:var(--accent); }
+  .ring-lbl { font-size:10px; color:var(--text3); letter-spacing:1px; }
+
+  /* ─── RATING GRID ─── */
+  .rating-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+  .rating-cell {
+    padding:8px 10px; border-radius:8px; border:1px solid var(--border);
+    background:var(--bg3); text-align:center;
+  }
+  .rating-cell-val { font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; }
+  .rating-cell-lbl { font-size:10px; color:var(--text3); margin-top:2px; letter-spacing:1px; }
+  .rc-premium { color:#d8b4fe; }
+  .rc-high    { color:var(--accent); }
+  .rc-medium  { color:var(--accent3); }
+  .rc-low     { color:var(--text3); }
+
+  /* ─── COMBO BOX ─── */
+  .combo-box { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:20px; margin-bottom:16px; }
+  .combo-list { margin-bottom:12px; }
+  .combo-item {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px 10px; margin-bottom:6px;
+    background:var(--bg3); border-radius:8px; border:1px solid var(--border);
+  }
+  .combo-item-left { flex:1; }
+  .combo-teams { font-size:12px; font-weight:600; color:var(--text); }
+  .combo-pred { font-size:11px; color:var(--text3); margin-top:2px; }
+  .combo-odd { font-family:'Rajdhani',sans-serif; font-size:18px; font-weight:700; color:var(--accent3); margin:0 10px; }
+  .remove-btn { background:none; border:none; color:var(--danger); cursor:pointer; font-size:16px; line-height:1; padding:2px 6px; }
+  .combo-total { padding:12px; background:rgba(0,229,160,0.06); border:1px solid rgba(0,229,160,0.2); border-radius:10px; margin-bottom:12px; }
+  .combo-total-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .combo-total-row:last-child { margin-bottom:0; }
+  .ct-label { font-size:12px; color:var(--text2); }
+  .ct-val { font-family:'IBM Plex Mono',monospace; font-size:14px; font-weight:600; color:var(--text); }
+  .ct-val.big { font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; color:var(--accent); }
+  .combo-stake-row { display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+  .stake-input {
+    flex:1; padding:10px 14px; background:var(--bg3); border:1px solid var(--border);
+    border-radius:8px; color:var(--text); font-family:'IBM Plex Mono',monospace;
+    font-size:14px; outline:none; transition:.2s;
+  }
+  .stake-input:focus { border-color:var(--accent); }
+  .stake-label { font-size:11px; color:var(--text3); white-space:nowrap; }
+  .calc-btn {
+    width:100%; padding:12px;
+    background:linear-gradient(135deg, rgba(0,229,160,0.2), rgba(0,184,255,0.15));
+    border:1px solid rgba(0,229,160,0.4); border-radius:10px; color:var(--accent);
+    font-family:'Rajdhani',sans-serif; font-size:15px; font-weight:700; letter-spacing:1px;
+    cursor:pointer; transition:.2s;
+  }
+  .calc-btn:hover { background:linear-gradient(135deg, rgba(0,229,160,0.3), rgba(0,184,255,0.25)); }
+  .empty-combo { text-align:center; padding:24px; color:var(--text3); font-size:13px; }
+  .empty-combo-icon { font-size:32px; margin-bottom:8px; }
+  .warning-note {
+    background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.2);
+    border-radius:10px; padding:10px 14px; font-size:11px;
+    color:rgba(245,158,11,0.8); margin-bottom:16px; line-height:1.5;
+  }
+
+  /* ─── LOADING / ERROR STATES ─── */
+  .skeleton {
+    background: linear-gradient(90deg, var(--card) 25%, var(--card2) 50%, var(--card) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius:8px;
+  }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+  .skeleton-card {
+    height:200px; border-radius:16px; margin-bottom:12px;
+    border:1px solid var(--border);
+  }
+  .error-state {
+    text-align:center; padding:48px 24px;
+    color:var(--text3); font-size:14px;
+  }
+  .error-state .error-icon { font-size:36px; margin-bottom:12px; }
+  .error-state .error-msg { color:var(--danger); margin-bottom:16px; }
+  .error-retry {
+    padding:8px 20px; border-radius:8px;
+    background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.3);
+    color:var(--danger); font-size:13px; font-weight:600; cursor:pointer;
+  }
+  .no-bet-overlay {
+    position:absolute; top:12px; right:12px;
+    font-size:10px; font-weight:700; padding:3px 8px; border-radius:4px;
+    background:rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.25);
+    color:var(--danger); font-family:'IBM Plex Mono',monospace;
+    pointer-events:none;
+  }
+  .update-bar {
+    font-size:11px; color:var(--text3); font-family:'IBM Plex Mono',monospace;
+    text-align:right; margin-bottom:12px; padding-right:4px;
+  }
+  .section-title-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width:5px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width:900px) {
+    .main { grid-template-columns:1fr; }
+    .sidebar { position:static; }
+    .header-stats { display:none; }
+  }
+
+  /* ─── ANIMATIONS ─── */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+  .match-card:nth-child(1){animation-delay:.04s}
+  .match-card:nth-child(2){animation-delay:.08s}
+  .match-card:nth-child(3){animation-delay:.12s}
+  .match-card:nth-child(4){animation-delay:.16s}
+  .match-card:nth-child(5){animation-delay:.20s}
+  .match-card:nth-child(6){animation-delay:.24s}
+  .notification {
+    position:fixed; bottom:24px; right:24px;
+    background:var(--card2); border:1px solid rgba(0,229,160,0.4);
+    color:var(--text); padding:12px 18px; border-radius:12px; font-size:13px;
+    transform:translateY(80px); opacity:0; transition:.3s; z-index:1000;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  .notification.show { transform:translateY(0); opacity:1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-block">
+      <div class="logo">BET<span>IQ</span></div>
+      <span class="logo-sub">AKILLI TAHMİN PLATFORMU v2</span>
+    </div>
+    <div class="header-stats">
+      <div class="hstat">
+        <div class="hstat-val" id="hstatValue">—</div>
+        <div class="hstat-lbl">Value Bet</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-val" id="hstatMatches">—</div>
+        <div class="hstat-lbl">Analiz Edilen</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-val" id="hstatPremium">—</div>
+        <div class="hstat-lbl">Premium Edge</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-val" id="hstatTrap">—</div>
+        <div class="hstat-lbl">Tuzak Maç</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="refresh-btn" id="refreshBtn" onclick="manualRefresh()">↻ Güncelle</button>
+      <div class="live-badge"><div class="live-dot"></div>CANLI</div>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+  <!-- LEFT: MATCHES -->
+  <div class="left-col">
+    <div class="section-title-bar">
+      <div class="tabs">
+        <button class="tab active" onclick="setTab('value',this)">⚡ Value Betler</button>
+        <button class="tab" onclick="setTab('futbol',this)">⚽ Futbol</button>
+        <button class="tab" onclick="setTab('basketbol',this)">🏀 Basketbol</button>
+        <button class="tab" onclick="setTab('kombine',this)">🎯 Kombine</button>
+      </div>
+    </div>
+    <div class="filter-bar" id="filterBar">
+      <div class="filter-chip active" onclick="setFilter('all',this)">Tümü</div>
+      <div class="filter-chip" onclick="setFilter('premium',this)">🟣 Premium</div>
+      <div class="filter-chip" onclick="setFilter('high',this)">🟢 Yüksek Edge</div>
+      <div class="filter-chip" onclick="setFilter('notrap',this)">🛡️ Tuzaksız</div>
+      <div class="filter-chip" onclick="setFilter('futbol',this)">Futbol</div>
+      <div class="filter-chip" onclick="setFilter('basketbol',this)">Basketbol</div>
+    </div>
+    <div class="update-bar" id="updateBar"></div>
+    <div id="matchesContainer"></div>
+    <div id="comboPage" style="display:none;"></div>
+  </div>
+
+  <!-- RIGHT: SIDEBAR -->
+  <div class="sidebar">
+    <!-- ENGINE STATS -->
+    <div class="stats-box">
+      <div class="box-title"><div class="box-title-dot"></div>Motor Raporu</div>
+      <div class="accuracy-ring">
+        <svg class="ring-svg" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(31,45,69,1)" stroke-width="8"/>
+          <circle cx="50" cy="50" r="42" fill="none" stroke="url(#ringGrad)" stroke-width="8"
+            stroke-dasharray="197 264" stroke-dashoffset="66" stroke-linecap="round" id="ringCircle"/>
+          <defs>
+            <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#00e5a0"/>
+              <stop offset="100%" style="stop-color:#00b8ff"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="ring-text">
+          <div class="ring-pct" id="ringPct">—</div>
+          <div class="ring-lbl">VALUE</div>
+        </div>
+      </div>
+      <div class="stat-row"><span class="stat-name">Analiz Edilen</span><span class="stat-val" id="sTotal">—</span></div>
+      <div class="stat-row"><span class="stat-name">Value Bet</span><span class="stat-val" id="sValue">—</span></div>
+      <div class="stat-row"><span class="stat-name">Tuzak Maç</span><span class="stat-val warn" id="sTrap">—</span></div>
+      <div class="stat-row"><span class="stat-name">Son Güncelleme</span><span class="stat-val" id="sUpdate" style="font-size:11px;">—</span></div>
+      <div class="box-title" style="margin-top:16px;margin-bottom:8px;font-size:13px;">Rating Dağılımı</div>
+      <div class="rating-grid">
+        <div class="rating-cell"><div class="rating-cell-val rc-premium" id="rPremium">0</div><div class="rating-cell-lbl">PREMIUM</div></div>
+        <div class="rating-cell"><div class="rating-cell-val rc-high" id="rHigh">0</div><div class="rating-cell-lbl">YÜKSEK</div></div>
+        <div class="rating-cell"><div class="rating-cell-val rc-medium" id="rMedium">0</div><div class="rating-cell-lbl">ORTA</div></div>
+        <div class="rating-cell"><div class="rating-cell-val rc-low" id="rLow">0</div><div class="rating-cell-lbl">DÜŞÜK</div></div>
+      </div>
+    </div>
+
+    <!-- COMBO BUILDER -->
+    <div class="combo-box">
+      <div class="box-title"><div class="box-title-dot" style="background:var(--accent3)"></div>Kombine Kupon</div>
+      <div class="warning-note">⚠️ Min kupon: <strong>50 TL</strong> | Nesine uyumlu format</div>
+      <div class="combo-list" id="comboList">
+        <div class="empty-combo"><div class="empty-combo-icon">🎯</div>Maç kartından "+ Kombine" tuşuna bas</div>
+      </div>
+      <div id="comboTotal" style="display:none">
+        <div class="combo-total">
+          <div class="combo-total-row"><span class="ct-label">Toplam Oran</span><span class="ct-val" id="totalOdd">-</span></div>
+          <div class="combo-total-row"><span class="ct-label">Güven Skoru</span><span class="ct-val" id="totalConf">-</span></div>
+          <div class="combo-total-row"><span class="ct-label">Tahmini Kazanç</span><span class="ct-val big" id="totalWin">-</span></div>
+        </div>
+        <div class="combo-stake-row">
+          <span class="stake-label">Bahis (TL):</span>
+          <input type="number" class="stake-input" id="stakeInput" value="50" min="50" step="10" oninput="calcCombo()">
+        </div>
+        <button class="calc-btn" onclick="calcCombo()">⚡ KAZANCI HESAPLA</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="notification" id="notif"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════════════════════════════
+const API_BASE = '';          // same-origin; Railway'de boş bırakılabilir
+const AUTO_REFRESH_MS = 5 * 60 * 1000;  // 5 dakikada bir otomatik yenileme
+
+// Güvenlik token'ı — Railway Dashboard'da REFRESH_TOKEN env variable ile eşleşmeli.
+// Token ayarlanmamışsa backend kontrolü devre dışıdır (geliştirme ortamı için uygundur).
+// PRODUCTION: Railway Variables → REFRESH_TOKEN=senin_gizli_değerin
+//             Aşağıdaki sabiti de aynı değere ayarla.
+const REFRESH_TOKEN = 'betiq_2025_gizli'; // örn: 'betiq_2025_gizli'
+
+// ══════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════
+let currentTab    = 'value';
+let currentFilter = 'all';
+let comboItems    = [];
+let allMatches    = [];   // normalized from /api/maclar (football + basketball)
+let valueBetList  = [];   // from /api/value-betler
+let engineMeta    = {};
+let isLoading     = false;
+let lastUpdated   = null;
+
+// ══════════════════════════════════════════════════════════════
+// API LAYER
+// ══════════════════════════════════════════════════════════════
+
+async function apiFetch(path, options = {}) {
+  const res = await fetch(API_BASE + path, options);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.hata || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+async function loadAllData() {
+  if (isLoading) return;
+  isLoading = true;
+  setRefreshSpinner(true);
+  showSkeletons();
+
+  try {
+    // Parallel fetch
+    const [valueData, footballData, basketballData, motorData] = await Promise.all([
+      apiFetch('/api/value-betler'),
+      apiFetch('/api/futbol'),
+      apiFetch('/api/basketbol'),
+      apiFetch('/api/motor-ozet').catch(() => null),
+    ]);
+
+    // Build combined match list (football + basketball)
+    allMatches = [
+      ...(footballData.maclar  || []),
+      ...(basketballData.maclar || []),
+    ];
+    valueBetList = valueData.valueBetler || [];
+    engineMeta   = motorData || {};
+    lastUpdated  = valueData.sonGuncelleme || new Date().toISOString();
+
+    updateHeaderStats();
+    updateSidebar();
+    render();
+    updateUpdateBar();
+    notify('✓ Veriler güncellendi — ' + valueBetList.length + ' value bet hazır');
+
+  } catch (err) {
+    console.error('[BetIQ]', err);
+    showError(err.message);
+    notify('⚠ Veri alınamadı: ' + err.message);
+  } finally {
+    isLoading = false;
+    setRefreshSpinner(false);
+  }
+}
+
+async function manualRefresh() {
+  if (isLoading) { notify('⏳ Güncelleme zaten devam ediyor...'); return; }
+
+  setRefreshSpinner(true);
+
+  const updateBar = document.getElementById('updateBar');
+  if (updateBar) {
+    updateBar.textContent = '⏳ Canlı veriler çekiliyor, lütfen bekleyin...';
+    updateBar.style.display = 'block';
+  }
+
+  try {
+    // Header hazırla — REFRESH_TOKEN varsa gönder
+    const headers = { 'Content-Type': 'application/json' };
+    if (REFRESH_TOKEN) headers['x-refresh-token'] = REFRESH_TOKEN;
+
+    // Backend runDataRefresh() BİTENE KADAR bekle (Race Condition YOK)
+    const yanit = await fetch(API_BASE + '/api/guncelle', { method: 'POST', headers });
+    const veri  = await yanit.json().catch(() => ({}));
+
+    if (!yanit.ok && yanit.status !== 206) {
+      throw new Error(veri.mesaj || veri.hata || `HTTP ${yanit.status}`);
+    }
+
+    // Backend tamamlandı — güncel veriyi çek ve ekrana yansıt
+    await loadAllData();
+
+    if (yanit.status === 206) {
+      notify('⚠ Dış API yanıt vermedi, eski veriler gösteriliyor.');
+    }
+
+  } catch (err) {
+    console.error('[BetIQ] Manuel güncelleme hatası:', err);
+    notify('⚠ Hata: ' + err.message);
+    setRefreshSpinner(false);
+    if (updateBar) updateBar.textContent = '❌ Güncelleme başarısız: ' + err.message;
+  } finally {
+    setTimeout(() => { if (updateBar) updateBar.style.display = 'none'; }, 4000);
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// DATA HELPERS
+// ══════════════════════════════════════════════════════════════
+
+/** Returns current display list based on tab + filter */
+function getDisplayList() {
+  let list;
+  if (currentTab === 'value') {
+    // Use valueBetList (already ranked by edge)
+    // But we need the full match for card rendering — join by ID
+    list = valueBetList
+      .map(vb => {
+        const full = allMatches.find(m => m.id === vb.id);
+        return full ? { ...full, _vb: vb } : null;
+      })
+      .filter(Boolean);
+  } else if (currentTab === 'futbol') {
+    list = allMatches.filter(m => m.sport === 'football');
+  } else if (currentTab === 'basketbol') {
+    list = allMatches.filter(m => m.sport === 'basketball');
+  } else {
+    return null; // combo tab
+  }
+
+  // Apply filter
+  if (currentFilter === 'premium') {
+    list = list.filter(m => (m._vb || {}).rating === 'PREMIUM' || (m.valueReport?.bestBet?.rating) === 'PREMIUM');
+  } else if (currentFilter === 'high') {
+    list = list.filter(m => ['PREMIUM','YÜKSEK'].includes((m._vb || {}).rating));
+  } else if (currentFilter === 'notrap') {
+    list = list.filter(m => !((m._vb || {}).trapScore >= 55) && !(m.valueReport?.trapReport?.isTrap));
+  } else if (currentFilter === 'futbol') {
+    list = list.filter(m => m.sport === 'football');
+  } else if (currentFilter === 'basketbol') {
+    list = list.filter(m => m.sport === 'basketball');
+  }
+  return list;
+}
+
+/** Extracts value-bet info from a match, whether it's a full match or valueBet entry */
+function getVBInfo(m) {
+  if (m._vb) return m._vb;
+  if (m.valueReport?.bestBet) {
+    const b = m.valueReport.bestBet;
+    return {
+      market:    b.marketLabel,
+      odd:       b.odd,
+      edge:      b.edge,
+      edgePct:   parseFloat((b.edge * 100).toFixed(1)),
+      rating:    b.rating,
+      trueProb:  b.trueProb,
+      trueProbPct: parseFloat((b.trueProb * 100).toFixed(1)),
+      ev:        b.ev,
+      kelly:     b.kellyCriterion,
+      kellyPct:  parseFloat((b.kellyCriterion * 100).toFixed(1)),
+      trapRisk:  m.valueReport.trapReport.trapLabel,
+      trapScore: m.valueReport.trapReport.trapScore,
+      summary:   m.valueReport.summary,
+      projScore: m.valueReport.pace.projectedScore,
+      tempo:     m.valueReport.pace.tempoLabel,
+    };
+  }
+  return null;
+}
+
+// ══════════════════════════════════════════════════════════════
+// HEADER / SIDEBAR UPDATES
+// ══════════════════════════════════════════════════════════════
+
+function updateHeaderStats() {
+  const premium = valueBetList.filter(v => v.rating === 'PREMIUM').length;
+  const traps   = (engineMeta.trapliMac) || 0;
+  animNum('hstatValue',   valueBetList.length);
+  animNum('hstatMatches', engineMeta.totalMaclar || allMatches.length);
+  animNum('hstatPremium', premium);
+  animNum('hstatTrap',    traps);
+}
+
+function updateSidebar() {
+  const total  = engineMeta.analizEdilen || allMatches.length;
+  const vcount = valueBetList.length;
+  const pct    = total > 0 ? Math.round(vcount / total * 100) : 0;
+
+  document.getElementById('ringPct').textContent = '%' + pct;
+  // Update ring circle dasharray
+  const circumference = 2 * Math.PI * 42; // ≈264
+  const dash = (pct / 100) * circumference;
+  document.getElementById('ringCircle').setAttribute('stroke-dasharray', `${dash.toFixed(0)} ${circumference.toFixed(0)}`);
+
+  setText('sTotal',  total);
+  setText('sValue',  vcount);
+  setText('sTrap',   engineMeta.trapliMac || 0);
+  const ts = lastUpdated ? new Date(lastUpdated).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'}) : '—';
+  setText('sUpdate', ts);
+
+  const rd = engineMeta.ratingDagilimi || {};
+  setText('rPremium', rd['PREMIUM']  || 0);
+  setText('rHigh',    rd['YÜKSEK']   || 0);
+  setText('rMedium',  rd['ORTA']     || 0);
+  setText('rLow',     rd['DÜŞÜK']    || 0);
+}
+
+function updateUpdateBar() {
+  const ts = lastUpdated ? new Date(lastUpdated).toLocaleString('tr-TR') : '';
+  document.getElementById('updateBar').textContent = ts ? `Son güncelleme: ${ts}` : '';
+}
+
+// ══════════════════════════════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════════════════════════════
+
+function render() {
+  const container = document.getElementById('matchesContainer');
+  const comboPage = document.getElementById('comboPage');
+
+  if (currentTab === 'kombine') {
+    container.style.display = 'none';
+    comboPage.style.display = 'block';
+    renderCombinePage();
+    return;
+  }
+  container.style.display = 'block';
+  comboPage.style.display = 'none';
+
+  const list = getDisplayList();
+  if (!list) return;
+
+  container.innerHTML = '';
+
+  if (list.length === 0) {
+    container.innerHTML = `<div class="error-state">
+      <div class="error-icon">🔍</div>
+      <div style="margin-bottom:8px;">Bu kriterlere uygun maç bulunamadı.</div>
+      <div style="font-size:12px;color:var(--text3);">Filtre değiştir veya veriyi güncelle.</div>
+    </div>`;
+    return;
+  }
+
+  // Group by league
+  const groups = {};
+  list.forEach(m => {
+    const key = m.league || 'Diğer';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(m);
+  });
+
+  Object.entries(groups).forEach(([league, matches]) => {
+    const g = document.createElement('div');
+    g.className = 'day-group';
+    g.innerHTML = `<div class="day-header">
+      <span class="day-label">📋 ${league}</span>
+      <div class="day-line"></div>
+      <span class="day-count">${matches.length} maç</span>
+    </div>`;
+    matches.forEach(m => g.appendChild(buildCard(m)));
+    container.appendChild(g);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// CARD BUILDER
+// ══════════════════════════════════════════════════════════════
+
+function buildCard(m) {
+  const div = document.createElement('div');
+  const vb  = getVBInfo(m);
+  const isTrap     = vb && vb.trapScore >= 55;
+  const isValueBet = vb && vb.edge > 0;
+  const isNoBet    = !isValueBet;
+
+  div.className = 'match-card'
+    + (isValueBet && !isTrap ? ' value-card' : '')
+    + (isTrap ? ' trap-card' : '')
+    + (comboItems.find(c => c.id === m.id) ? ' selected' : '');
+  div.id = 'card-' + m.id;
+
+  const home = m.teams?.home;
+  const away = m.teams?.away;
+  const odds = m.odds?.raw?.iddaa || {};
+  const impl = m.odds?.impliedProb || {};
+  const form = fn => (fn?.last5 || []).map(r =>
+    `<div class="form-dot form-${r.toLowerCase()}">${r}</div>`
+  ).join('');
+
+  const kickoffTR = m.kickoffTime
+    ? new Date(m.kickoffTime).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'})
+    : '—';
+
+  const edgeClass = !vb ? 'edge-low'
+    : vb.rating === 'PREMIUM' ? 'edge-premium'
+    : vb.rating === 'YÜKSEK'  ? 'edge-high'
+    : vb.rating === 'ORTA'    ? 'edge-medium'
+    : 'edge-low';
+
+  const confPct   = vb ? vb.trueProbPct : Math.round((impl.home || 0.5) * 100);
+  const confClass = confPct >= 70 ? 'high' : confPct >= 60 ? 'med' : 'low';
+  const fillClass = confPct >= 70 ? 'fill-high' : confPct >= 60 ? 'fill-med' : 'fill-low';
+
+  // Determine recommended odds box
+  let recKey = 'home';
+  if (vb) {
+    if (vb.market.includes('MS2') || vb.market.includes('Deplasman')) recKey = 'away';
+    else if (vb.market.includes('Beraberlik') || vb.market.includes('MSX')) recKey = 'draw';
+  }
+
+  // Kelly stake suggestion (50 TL baseline)
+  const bankroll = 500;
+  const kellyStake = vb ? Math.max(50, Math.round(bankroll * (vb.kelly || 0.05) / 10) * 10) : 50;
+  const potGain   = vb ? Math.round(kellyStake * vb.odd) : 0;
+
+  const trapBadge = isTrap
+    ? `<span class="trap-flag">⚠ ${vb.trapRisk}</span>`
+    : '';
+  const edgeBadge = vb
+    ? `<span class="edge-badge ${edgeClass}">EDGE +${vb.edgePct}%</span>`
+    : `<span class="edge-badge edge-low">NO BET</span>`;
+
+  const tempoInfo = vb ? `<div class="vs-tempo">${vb.tempo}</div><div class="vs-score">${vb.projScore}</div>` : '';
+
+  div.innerHTML = `
+    ${isNoBet ? '<div class="no-bet-overlay">NO BET</div>' : ''}
+    <div class="card-top">
+      <div class="card-meta">
+        <span class="league-badge">${(m.leagueId||'').slice(0,6)}</span>
+        <span class="platform-badge">${(m.availablePlatform||'').toUpperCase()}</span>
+        <span class="match-time">🕐 ${kickoffTR}</span>
+        ${edgeBadge}
+        ${trapBadge}
+      </div>
+      <span class="match-time" style="font-size:11px;color:var(--text3);">${m.league||''}</span>
+    </div>
+
+    <div class="teams" onclick="toggleDetails('${m.id}')">
+      <div class="team">
+        <div class="team-name">${home?.name || '?'}</div>
+        <div class="team-form">${form(home?.form)}</div>
+      </div>
+      <div class="vs-block">
+        <div class="vs-text">VS</div>
+        ${tempoInfo}
+      </div>
+      <div class="team">
+        <div class="team-name">${away?.name || '?'}</div>
+        <div class="team-form">${form(away?.form)}</div>
+      </div>
+    </div>
+
+    ${vb ? `
+    <div class="pred-row">
+      <div class="pred-icon">⚡</div>
+      <div class="pred-main">
+        <div class="pred-label">VALUE BET</div>
+        <div class="pred-value">${vb.market}</div>
+      </div>
+      <div class="pred-confidence">
+        <span class="conf-pct ${confClass}">%${confPct}</span>
+        <div class="conf-bar"><div class="conf-fill ${fillClass}" style="width:${confPct}%"></div></div>
+      </div>
+    </div>
+
+    <div class="value-row ${isTrap ? 'trap-row' : ''}">
+      <div class="vr-section">
+        <span class="vr-label">Edge</span>
+        <span class="vr-val ${isTrap?'warn':'accent'}">+${vb.edgePct}%</span>
+      </div>
+      <div class="vr-divider"></div>
+      <div class="vr-section">
+        <span class="vr-label">EV</span>
+        <span class="vr-val ${vb.rating==='PREMIUM'?'premium':'accent'}">${vb.ev > 0 ? '+' : ''}${vb.ev.toFixed(3)}</span>
+      </div>
+      <div class="vr-divider"></div>
+      <div class="vr-section">
+        <span class="vr-label">Kelly %</span>
+        <span class="vr-val accent">${vb.kellyPct}%</span>
+      </div>
+      <div class="vr-divider"></div>
+      <div class="vr-section">
+        <span class="vr-label">Oran</span>
+        <span class="vr-val ${isTrap?'warn':'accent'}">${vb.odd}</span>
+      </div>
+    </div>` : ''}
+
+    <div class="odds-row">
+      <div class="odd-box ${recKey==='home'&&vb?'recommended':''}">
+        <div class="odd-name">MS1</div>
+        <div class="odd-val ${recKey==='home'&&vb?'':'normal'}">${odds.home||'—'}</div>
+        ${recKey==='home'&&vb?'<div class="rec-arrow">▲ VALUE</div>':''}
+      </div>
+      ${m.sport!=='basketball' ? `<div class="odd-box ${recKey==='draw'&&vb?'recommended':''}">
+        <div class="odd-name">MSX</div>
+        <div class="odd-val ${recKey==='draw'&&vb?'':'normal'}">${odds.draw||'—'}</div>
+        ${recKey==='draw'&&vb?'<div class="rec-arrow">▲ VALUE</div>':''}
+      </div>` : ''}
+      <div class="odd-box ${recKey==='away'&&vb?'recommended':''}">
+        <div class="odd-name">MS2</div>
+        <div class="odd-val ${recKey==='away'&&vb?'':'normal'}">${odds.away||'—'}</div>
+        ${recKey==='away'&&vb?'<div class="rec-arrow">▲ VALUE</div>':''}
+      </div>
+      ${m.sport!=='basketball' && odds.over25 ? `<div class="odd-box ${vb?.market?.includes('Üst 2.5')?'recommended':''}">
+        <div class="odd-name">Üst 2.5</div>
+        <div class="odd-val ${vb?.market?.includes('Üst 2.5')?'':'normal'}">${odds.over25}</div>
+        ${vb?.market?.includes('Üst 2.5')?'<div class="rec-arrow">▲ VALUE</div>':''}
+      </div>` : ''}
+    </div>
+
+    ${vb ? `<div class="invest-row">
+      <div>
+        <div class="invest-label">Önerilen Yatırım (Kelly)</div>
+        <div class="invest-values">
+          <span class="invest-min">Min: 50 TL</span>
+          <span class="invest-rec">${kellyStake} TL</span>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="invest-gain">+${potGain} TL tahmini kazanç</div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px;">${kellyStake} TL × ${vb.odd}</div>
+      </div>
+      <button class="add-combo-btn ${comboItems.find(c=>c.id===m.id)?'added':''}"
+        onclick="toggleCombo('${m.id}',event)">
+        ${comboItems.find(c=>c.id===m.id)?'✓ Eklendi':'+ Kombine'}
+      </button>
+    </div>` : ''}
+
+    <div class="details-panel" id="details-${m.id}">
+      ${vb ? buildDetailPanel(m, vb) : '<div style="color:var(--text3);font-size:12px;padding:8px;">Bu maç için value bet bulunamadı.</div>'}
+    </div>
+  `;
+  return div;
+}
+
+function buildDetailPanel(m, vb) {
+  const impl = m.odds?.impliedProb || {};
+  const homePct = Math.round((impl.home || 0) * 100);
+  const drawPct = Math.round((impl.draw || 0) * 100);
+  const awayPct = Math.round((impl.away || 0) * 100);
+
+  const homeInj = (m.teams?.home?.injuries || []).length;
+  const awayInj = (m.teams?.away?.injuries || []).length;
+  const h2h     = m.h2h || {};
+
+  const isTrap    = vb.trapScore >= 55;
+  const trapColor = isTrap ? 'orange' : 'green';
+
+  return `
+    <div class="detail-grid">
+      <div class="detail-item">
+        <div class="di-label">Tahmini Skor</div>
+        <div class="di-val green">${vb.projScore || '—'}</div>
+      </div>
+      <div class="detail-item">
+        <div class="di-label">Tempo</div>
+        <div class="di-val">${vb.tempo || '—'}</div>
+      </div>
+      <div class="detail-item">
+        <div class="di-label">H2H Trendi</div>
+        <div class="di-val">${h2h.recentTrend || '—'}</div>
+      </div>
+      <div class="detail-item">
+        <div class="di-label">H2H Maç</div>
+        <div class="di-val">${h2h.played || 0} karşılaşma</div>
+      </div>
+      <div class="detail-item">
+        <div class="di-label">Ev Sakatlık</div>
+        <div class="di-val ${homeInj>1?'orange':''}">${homeInj} oyuncu</div>
+      </div>
+      <div class="detail-item">
+        <div class="di-label">Dep Sakatlık</div>
+        <div class="di-val ${awayInj>1?'orange':''}">${awayInj} oyuncu</div>
+      </div>
+      <div class="detail-item">
+        <div class="di-label">Tuzak Skoru</div>
+        <div class="di-val ${trapColor}">${vb.trapScore}/100 — ${vb.trapRisk}</div>
+      </div>
+      <div class="detail-item">
+        <div class="di-label">EV / Oran</div>
+        <div class="di-val purple">EV ${vb.ev>0?'+':''}${vb.ev.toFixed(3)} @ ${vb.odd}</div>
+      </div>
+    </div>
+    <div class="prob-bar-row">
+      <div class="prob-bar-label">
+        <span>Zımni Olasılık Dağılımı</span>
+        <span>MS1 %${homePct} · MSX %${drawPct} · MS2 %${awayPct}</span>
+      </div>
+      <div class="prob-bar-track">
+        <div class="pb-seg pb-home" style="width:${homePct}%"></div>
+        <div class="pb-seg pb-draw" style="width:${drawPct}%"></div>
+        <div class="pb-seg pb-away" style="width:${awayPct}%"></div>
+      </div>
+    </div>
+    <div class="analysis-text ${isTrap?'trap-text':''}">
+      📊 ${vb.summary || 'Analiz verisi yükleniyor...'}
+    </div>
+  `;
+}
+
+// ══════════════════════════════════════════════════════════════
+// COMBO PAGE
+// ══════════════════════════════════════════════════════════════
+
+function renderCombinePage() {
+  const p = document.getElementById('comboPage');
+  // Build auto combo from top 3 approved value bets
+  const top3 = valueBetList.slice(0, 3);
+  const totalOdd = top3.reduce((acc, vb) => acc * vb.odd, 1);
+  const avgEdge  = top3.length > 0
+    ? (top3.reduce((acc, vb) => acc + vb.edge, 0) / top3.length * 100).toFixed(1)
+    : 0;
+
+  p.innerHTML = `
+    <div class="box-title" style="margin-bottom:20px;font-family:Rajdhani;font-size:20px;font-weight:700;letter-spacing:2px;">
+      <div class="box-title-dot" style="width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);margin-right:8px;display:inline-block;"></div>
+      GÜNÜN VALUE KOMBİNESİ
+    </div>
+    <div class="warning-note">
+      ⚠️ Nesine uyumlu format | Minimum 50 TL | Her maç için ayrı ayrı onaylı value bet
+    </div>
+    ${top3.length > 0 ? `
+    <div style="background:var(--card);border:1px solid rgba(0,229,160,0.3);border-radius:16px;padding:20px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div>
+          <div style="font-family:Rajdhani;font-size:18px;font-weight:700;">⚡ Motor Önerisi (MSB${top3.length})</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px;">Ortalama Edge: +%${avgEdge}</div>
+        </div>
+        <div style="font-family:Rajdhani;font-size:32px;font-weight:700;color:var(--accent3);">${totalOdd.toFixed(2)}x</div>
+      </div>
+      ${top3.map(vb => `
+        <div style="display:flex;justify-content:space-between;padding:12px 14px;margin-bottom:6px;background:var(--bg3);border-radius:10px;border:1px solid var(--border);">
+          <div>
+            <div style="font-size:13px;font-weight:600;">${vb.homeTeam} vs ${vb.awayTeam}</div>
+            <div style="font-size:11px;color:var(--accent);margin-top:3px;">${vb.market} · Edge +${vb.edgePct}%</div>
+          </div>
+          <div style="font-family:Rajdhani;font-size:24px;font-weight:700;color:var(--accent3);">${vb.odd}</div>
+        </div>
+      `).join('')}
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+        <div>
+          <div style="font-size:11px;color:var(--text3);">Min Yatırım: 50 TL</div>
+          <div style="font-size:11px;color:var(--win);margin-top:2px;">Tahmini Kazanç: ${(50*totalOdd).toFixed(0)} TL</div>
+        </div>
+        <button onclick="loadValueCombo()" style="padding:8px 20px;background:rgba(0,229,160,0.15);border:1px solid rgba(0,229,160,0.4);border-radius:8px;color:var(--accent);font-family:Rajdhani;font-size:14px;font-weight:700;cursor:pointer;">
+          KOMBİNEYE YÜKLE
+        </button>
+      </div>
+    </div>` : `<div class="error-state"><div class="error-icon">📭</div>Yeterli value bet bulunamadı.</div>`}
+
+    <div class="box-title" style="margin:20px 0 12px;font-size:16px;">TÜM VALUE BETLER</div>
+    ${valueBetList.map(vb => `
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:8px;
+        ${vb.rating==='PREMIUM'?'border-color:rgba(168,85,247,0.3);':''}"
+      >
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:13px;font-weight:600;">${vb.homeTeam} vs ${vb.awayTeam}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px;">${vb.league} · ${vb.tempo||''} · ${vb.projScore||''}</div>
+          </div>
+          <span class="edge-badge ${vb.rating==='PREMIUM'?'edge-premium':vb.rating==='YÜKSEK'?'edge-high':'edge-medium'}">${vb.rating}</span>
+        </div>
+        <div style="display:flex;gap:16px;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);">
+          <div><div style="font-size:10px;color:var(--text3);">PAZAR</div><div style="font-size:12px;color:var(--accent);font-weight:600;">${vb.market}</div></div>
+          <div><div style="font-size:10px;color:var(--text3);">ORAN</div><div style="font-family:Rajdhani;font-size:16px;font-weight:700;color:var(--accent3);">${vb.odd}</div></div>
+          <div><div style="font-size:10px;color:var(--text3);">EDGE</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent);">+${vb.edgePct}%</div></div>
+          <div><div style="font-size:10px;color:var(--text3);">EV</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:${vb.ev>0?'var(--win)':'var(--danger)'};">${vb.ev>0?'+':''}${vb.ev.toFixed(3)}</div></div>
+          <div><div style="font-size:10px;color:var(--text3);">KELLY</div><div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text2);">${vb.kellyPct}%</div></div>
+          <div><div style="font-size:10px;color:var(--text3);">TUZAK</div><div style="font-size:12px;color:${vb.trapScore>=55?'var(--trap)':vb.trapScore>=30?'var(--accent3)':'var(--win)'};">${vb.trapRisk}</div></div>
+        </div>
+      </div>
+    `).join('') || '<div class="error-state"><div class="error-icon">📭</div>Bugün value bet yok.</div>'}
+  `;
+}
+
+function loadValueCombo() {
+  const top3 = valueBetList.slice(0,3);
+  comboItems = top3.map((vb, i) => ({
+    id: vb.id, teams: `${vb.homeTeam} vs ${vb.awayTeam}`, pred: vb.market, odd: vb.odd
+  }));
+  updateComboPanel();
+  notify('✓ Value kombine yüklendi!');
+}
+
+// ══════════════════════════════════════════════════════════════
+// COMBO LOGIC
+// ══════════════════════════════════════════════════════════════
+
+function toggleCombo(id, e) {
+  e && e.stopPropagation();
+  const match = allMatches.find(m => m.id === id);
+  const vb    = match ? getVBInfo(match) : valueBetList.find(v => v.id === id);
+  if (!match && !vb) return;
+
+  const idx = comboItems.findIndex(c => c.id === id);
+  if (idx >= 0) {
+    comboItems.splice(idx, 1);
+    notify('Maç kupondan çıkarıldı');
+  } else {
+    if (comboItems.length >= 8) { notify('⚠️ Maksimum 8 maç'); return; }
+    const odd   = vb?.odd || 1.5;
+    const pred  = vb?.market || 'MS1';
+    const teams = match
+      ? `${match.teams?.home?.name} vs ${match.teams?.away?.name}`
+      : `${vb.homeTeam} vs ${vb.awayTeam}`;
+    comboItems.push({ id, teams, pred, odd });
+    notify('✓ Kombineye eklendi!');
+  }
+  render();
+  updateComboPanel();
+}
+
+function updateComboPanel() {
+  const list  = document.getElementById('comboList');
+  const total = document.getElementById('comboTotal');
+  if (comboItems.length === 0) {
+    list.innerHTML = '<div class="empty-combo"><div class="empty-combo-icon">🎯</div>Maç kartından "+ Kombine" tuşuna bas</div>';
+    total.style.display = 'none';
+    return;
+  }
+  list.innerHTML = comboItems.map(c => `
+    <div class="combo-item">
+      <div class="combo-item-left">
+        <div class="combo-teams">${c.teams}</div>
+        <div class="combo-pred">${c.pred}</div>
+      </div>
+      <div class="combo-odd">${c.odd}</div>
+      <button class="remove-btn" onclick="toggleCombo('${c.id}',null)">✕</button>
+    </div>
+  `).join('');
+  total.style.display = 'block';
+  calcCombo();
+}
+
+function calcCombo() {
+  if (comboItems.length === 0) return;
+  const stake    = parseFloat(document.getElementById('stakeInput').value) || 50;
+  const totalOdd = comboItems.reduce((acc, c) => acc * c.odd, 1);
+  const conf     = Math.round(65 - (comboItems.length - 1) * 3 + (comboItems.length < 3 ? 5 : 0));
+  const win      = (stake * totalOdd).toFixed(0);
+  document.getElementById('totalOdd').textContent  = totalOdd.toFixed(2) + 'x';
+  document.getElementById('totalConf').textContent = '%' + Math.max(40, conf);
+  document.getElementById('totalWin').textContent  = win + ' TL';
+}
+
+// ══════════════════════════════════════════════════════════════
+// LOADING / ERROR UI
+// ══════════════════════════════════════════════════════════════
+
+function showSkeletons() {
+  const c = document.getElementById('matchesContainer');
+  c.innerHTML = [1,2,3,4].map(() =>
+    `<div class="skeleton skeleton-card"></div>`
+  ).join('');
+}
+
+function showError(msg) {
+  document.getElementById('matchesContainer').innerHTML = `
+    <div class="error-state">
+      <div class="error-icon">⚠️</div>
+      <div class="error-msg">${msg}</div>
+      <button class="error-retry" onclick="loadAllData()">Tekrar Dene</button>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════════════════════════════
+
+function setTab(tab, el) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function setFilter(filter, el) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function toggleDetails(id) {
+  const p = document.getElementById('details-' + id);
+  if (!p) return;
+  p.classList.toggle('open');
+}
+
+function notify(msg) {
+  const n = document.getElementById('notif');
+  n.textContent = msg;
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 2800);
+}
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function animNum(id, target) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const start = parseInt(el.textContent) || 0;
+  const steps = 20;
+  let i = 0;
+  const step = () => {
+    i++;
+    el.textContent = Math.round(start + (target - start) * (i / steps));
+    if (i < steps) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+function setRefreshSpinner(on) {
+  const btn = document.getElementById('refreshBtn');
+  if (on) btn.classList.add('spinning');
+  else    btn.classList.remove('spinning');
+}
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+
+loadAllData();
+setInterval(loadAllData, AUTO_REFRESH_MS);
+</script>
+</body>
+</html>
